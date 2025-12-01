@@ -1,0 +1,596 @@
+<!doctype html>
+<html lang="vi">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Xiên Thịt Nướng May Mắn</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Nunito:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+
+        :root {
+            --size: 380px;
+            --pointer-size: 30px;
+        }
+
+        body {
+    font-family: "Nunito", sans-serif;
+    display: flex;
+    gap: 24px;
+    align-items: center;        /* ✔ giữa chiều dọc */
+    justify-content: center;    /* ✔ giữa chiều ngang */
+    min-height: 100vh;
+    margin: 0;
+    /* Giả sử bạn có file thit.png trong thư mục này. Nếu không, hãy thay thế bằng màu nền hoặc đường dẫn khác */
+    background: url('thit.png') no-repeat center center; 
+    background-size: cover;
+    color: #000000;
+    box-sizing: border-box;
+    padding: 0;
+}
+    h1, h2, h3, .wheel-center, button, .tag, label {
+        font-family: "Poppins", sans-serif !important;
+        font-weight: 700;
+    }
+
+    svg text {
+        font-family: "Poppins", sans-serif !important;
+    }
+        /* Left: Wheel area */
+        .wheel-wrap {
+            width: var(--size);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .wheel {
+            width: var(--size);
+            height: var(--size);
+            border-radius: 50%;
+            position: relative;
+            box-shadow: 0 8px 20px rgba(20, 30, 60, 0.12), inset 0 2px 8px rgba(4, 255, 222, 0.05);
+            transition: transform 1s cubic-bezier(.15, .85, .22, 1);
+            will-change: transform;
+            overflow: visible;
+        }
+
+        .wheel-center {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 28%;
+            height: 28%;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 14px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+        }
+
+.pointer {
+    width: 8px;        /* thân mũi tên */
+    height: 50px;
+    background: #ff0004;
+    position: relative;
+    margin: 0 auto;
+    top: 30px;         /* đặt trên vòng quay */
+    left: 1%;
+    transform: translateX(-50%);
+    z-index: 10;      /* luôn nổi trên bánh */
+    border-radius: 4px;
+    filter: drop-shadow(0 3px 6px rgba(0,0,0,0.2));
+}
+
+.pointer::after {
+    content: '';
+    position: absolute;
+    top: 40px;           /* nối đầu mũi với thân */
+    left: 50%;
+    transform: translateX(-50%) rotate(180deg); /* xoay tam giác xuống */
+    width: 20px;
+    height: 20px;
+    background: #ff0004;
+    clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
+}
+
+
+        /* Controls */
+        .controls {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+        }
+
+        button {
+            background: #0b76ff;
+            color: #fff;
+            border: 0;
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* Right: Name input and results */
+        .panel {
+            
+            width: 320px;
+            max-width: calc(100vw - 64px);
+            background: #fdbf85 ;
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 12px 30px rgba(255, 0, 0, 0.08);
+        }
+
+        textarea {
+            width: 100%;
+            height: 220px;
+            resize: vertical;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #FFD166;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+
+        label {
+            font-weight: 700;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .result {
+            margin-top: 12px;
+            padding: 12px;
+            border-radius: 8px;
+            background: linear-gradient(90deg, #FFD166, #fffbed);
+            border: 1px solid #FFD166;
+            font-weight: 700;
+            text-align: center;
+            font-size: 18px;
+        }
+
+        .small {
+            font-size: 13px;
+            color: #ff0000;
+            margin-top: 8px;
+        }
+
+        .preset {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 8px;
+        }
+
+        .tag {
+            background: #f1f7ff;
+            color: #0b76ff;
+            padding: 6px 8px;
+            border-radius: 999px;
+            cursor: pointer;
+            font-weight: 600;
+            border: 1px solid #ddebff;
+        }
+
+        /* Responsive */
+        @media (max-width:900px) {
+            body {
+                flex-direction: column;
+                align-items: center;
+                padding: 12px;
+            }
+
+            .panel {
+                width: 100%;
+            }
+        
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="wheel-wrap" aria-hidden="false">
+        <div class="pointer" title="Pointer"></div>
+        <div id="wheel" class="wheel" role="img" aria-label="Vòng quay may mắn">
+            <b><center><div class="wheel-center">VÒNG QUAY MAY MẮN</div></center></b>
+        </div>
+
+        <div class="controls">
+            <big><button id="spinBtn">Quay</button></big>
+        </div>
+        
+        <b><div class="big"></div></b>
+    </div>
+
+    <div class="panel" aria-hidden="false">
+        <label for="names">Danh sách tên (mỗi tên 1 dòng)</label>
+        <textarea id="names" placeholder="Ví dụ:Nhập nhớ xuống dòng nha"></textarea>
+
+        <div class="preset">
+            <center> <div class="tag" data-set="group1">Danh Sách</div></center>
+        </div>
+        
+        <div class="result" id="result" aria-live="polite">Chưa quay</div>
+        <b><big><n><div class="small">Kết quả sẽ xuất hiện ở đây ngay sau khi kết thúc.</div></big></b>
+
+        <div class="history-panel">
+            <h3>Lịch sử quay</h3>
+            <div id="history-scroll-container">
+                <table id="historyTable">
+                    <thead>
+                        <tr>
+                            <th>STT</th>
+                            <th>Tên</th>
+                            <th>Kết quả</th>
+                            <th>Thời gian</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <style>
+            .history-panel {
+                margin-top: 20px;
+                background: #fff3e0;
+                border-radius: 12px;
+                padding: 12px;
+                box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+            }
+
+            .history-panel h3 {
+                margin: 0 0 8px 0;
+                font-family: "Poppins", sans-serif;
+                font-weight: 700;
+                text-align: center;
+            }
+            
+            /* CSS MỚI: Giới hạn chiều cao và thêm thanh cuộn */
+            #history-scroll-container {
+                /* Giả định chiều cao của 1 hàng (row) là khoảng 30px */
+                /* 3 hàng * 30px = 90px. Đặt Max-height khoảng 100px là đủ cho 3 hàng */
+                max-height: 100px;
+                overflow-y: auto; /* Bật thanh cuộn dọc khi nội dung vượt quá chiều cao */
+                border: 1px solid #ffd166; /* Thêm viền để dễ nhìn khi có thanh cuộn */
+                border-radius: 6px;
+            }
+            /* Đảm bảo tiêu đề bảng (thead) không bị cuộn cùng nội dung (body) */
+            #historyTable thead {
+                display: table;
+                width: 100%;
+                table-layout: fixed;
+            }
+            /* Điều chỉnh kích thước tbody để cuộn được */
+            #historyTable tbody {
+                display: block;
+                height: auto; /* Chiều cao tự động dựa trên nội dung cuộn */
+                overflow-y: auto;
+            }
+            /* Điều chỉnh các cột trong tbody khớp với thead */
+            #historyTable tbody tr {
+                display: table;
+                width: 100%;
+                table-layout: fixed;
+            }
+
+
+            #historyTable {
+                width: 100%;
+                border-collapse: collapse;
+                font-size: 14px;
+            }
+
+            #historyTable th, #historyTable td {
+                /* Bỏ viền cũ trên table và thêm viền vào container để cuộn mượt hơn */
+                border: none;
+                border-bottom: 1px solid #ffd166;
+                padding: 6px 8px;
+                text-align: center;
+            }
+            /* Khôi phục border left/right cho ô */
+             #historyTable th:not(:last-child), #historyTable td:not(:last-child) {
+                border-right: 1px solid #ffd166;
+            }
+
+
+            #historyTable th {
+                background: #ffd166;
+                color: #000;
+            }
+        </style>
+    </div>
+
+    <script>
+    /*
+      Cách hoạt động:
+      - Lấy danh sách tên (mỗi tên 1 dòng).
+      - Vẽ bánh (sử dụng conic-gradient) với mỗi lát ứng với 1 tên.
+      - Khi nhấn "Quay", chọn 1 chỉ số ngẫu nhiên, tính góc xoay sao cho chỉ số đó vào vị trí pointer (top).
+      - Thêm nhiều vòng quay (spins) để có hiệu ứng đẹp.
+    */
+
+    const wheel = document.getElementById('wheel');
+    const spinBtn = document.getElementById('spinBtn');
+    const namesInput = document.getElementById('names');
+    const resultDiv = document.getElementById('result');
+    const presetTags = document.querySelectorAll('.tag');
+
+    // --- Bổ sung cho Lịch sử Quay ---
+    const historyTableBody = document.querySelector('#historyTable tbody');
+    
+    /**
+     * Thêm một hàng mới vào bảng lịch sử.
+     * Hàng mới nhất được CHÈN VÀO CUỐI BẢNG (sẽ hiện ở DƯỚI)
+     * và có STT tiếp theo (1, 2, 3...).
+     * @param {string} result Kết quả trúng thưởng
+     */
+    function addHistoryEntry(result) {
+        
+        // Lấy thời gian hiện tại theo định dạng HH:MM:SS
+        const now = new Date();
+        const timeString = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+
+        // QUAN TRỌNG: Tạo hàng mới
+        const newRow = document.createElement('tr');
+        
+        // Tạo các ô (cells)
+        const cellStt = newRow.insertCell(0);
+        const cellName = newRow.insertCell(1); // Ô Tên (giữ trống)
+        const cellResult = newRow.insertCell(2);
+        const cellTime = newRow.insertCell(3);
+
+        // Đặt nội dung
+        cellName.textContent = ''; // Giữ ô này trống nếu không có người chơi
+        cellResult.textContent = result;
+        cellTime.textContent = timeString;
+
+        // CHỈNH SỬA QUAN TRỌNG: CHÈN HÀNG MỚI VÀO VỊ TRÍ CUỐI (appendChild)
+        // Điều này đảm bảo bản ghi mới nhất luôn ở cuối bảng (phía dưới)
+        historyTableBody.appendChild(newRow); 
+        
+        // CẬP NHẬT LẠI SỐ THỨ TỰ (STT) CHO TẤT CẢ CÁC HÀNG
+        const totalRows = historyTableBody.rows.length;
+        for (let i = 0; i < totalRows; i++) {
+            // Hàng ở vị trí i (từ 0) sẽ có STT là i + 1
+            const stt = i + 1;
+            historyTableBody.rows[i].cells[0].textContent = stt;
+        }
+
+        // Bổ sung: Cuộn xuống cuối để thấy hàng mới nhất
+        const scrollContainer = document.getElementById('history-scroll-container');
+        scrollContainer.scrollTop = scrollContainer.scrollHeight;
+    }
+    // --- Kết thúc phần bổ sung cho Lịch sử Quay ---
+
+
+    // Helper: clean names array
+    function getNames() {
+        const raw = namesInput.value.split('\n').map(s => s.trim()).filter(Boolean);
+        // unique and keep order:
+        const seen = new Set();
+        const out = [];
+        for (const n of raw) {
+            if (!seen.has(n)) { seen.add(n); out.push(n); }
+        }
+        return out;
+    }
+
+    // Render wheel using CSS conic-gradient and label slices using SVG overlay
+    function renderWheel(names) {
+        if (!names.length) {
+            wheel.style.background = 'conic-gradient(#f5f6fb, #eef2ff)';
+            // remove labels if any
+            const existing = wheel.querySelector('svg');
+            if (existing) existing.remove();
+            return;
+        }
+
+        const colors = [
+            '#ffd8d8', '#ffe7d1', '#fff7d1', '#eaffd1', '#d0ffe7', '#d1f7ff', '#dfe4ff', '#f4dfff'
+        ];
+        // make gradient with alternating colors
+        const slice = 360 / names.length;
+        let gradientParts = [];
+        for (let i = 0; i < names.length; i++) {
+            const color = colors[i % colors.length];
+            const start = (i * slice).toFixed(6);
+            const end = ((i + 1) * slice).toFixed(6);
+            gradientParts.push(`${color} ${start}deg ${end}deg`);
+        }
+        wheel.style.background = `conic-gradient(${gradientParts.join(',')})`;
+
+        // create SVG labels if not exist or replace
+        let svg = wheel.querySelector('svg');
+        if (svg) svg.remove();
+        svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svg.setAttribute('viewBox', '0 0 100 100');
+        svg.setAttribute('width', '100%');
+        svg.setAttribute('height', '100%');
+        svg.style.position = 'absolute';
+        svg.style.left = 0;
+        svg.style.top = 0;
+        svg.style.pointerEvents = 'none';
+
+        const cx = 50, cy = 50, r = 45;
+        const sliceAngle = 360 / names.length;
+        for (let i = 0; i < names.length; i++) {
+            const midAngle = (i * sliceAngle + sliceAngle / 2) - 90; // -90 so 0deg is top
+            const rad = midAngle * Math.PI / 180;
+            const tx = cx + Math.cos(rad) * (r * 0.62);
+            const ty = cy + Math.sin(rad) * (r * 0.62);
+
+            const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            text.setAttribute('x', tx);
+            text.setAttribute('y', ty);
+            text.setAttribute('font-size', 3.8);
+            text.setAttribute('text-anchor', 'middle');
+            text.setAttribute('dominant-baseline', 'middle');
+            text.setAttribute('fill', '#223');
+            text.setAttribute('style', `font-weight:700; font-family: sans-serif;`);
+            // rotate text so it reads along radius
+            const rotateAngle = midAngle + 90;
+            text.setAttribute('transform', `rotate(${rotateAngle} ${tx} ${ty})`);
+            const name = names[i];
+            // shorten if too long
+            const short = name.length > 18 ? name.slice(0, 16) + '…' : name;
+            text.textContent = short;
+            svg.appendChild(text);
+        }
+
+        wheel.appendChild(svg);
+    }
+
+    // Compute rotation so that chosen index lands at top pointer
+    function computeRotationForIndex(index, count, extraSpins = 6) {
+        const slice = 360 / count;
+        // center angle (deg) for that slice measured from 0deg at top going clockwise
+        const targetAngle = index * slice + slice / 2;
+        // We need to rotate the wheel so that targetAngle ends up at 0deg (top).
+        // If wheel is rotated by R deg clockwise, then a point at angle A will move to (A + R) mod 360.
+        // We want (targetAngle + R) % 360 = 0  =>  R = 360 - targetAngle (mod 360)
+        const align = (360 - targetAngle) % 360;
+        const total = 360 * extraSpins + align;
+        return total;
+    }
+
+    // Spin action
+    function forceReflow() {
+        void wheel.offsetWidth;
+    }
+    let spinning = false;
+    spinBtn.addEventListener('click', () => {
+        const names = getNames();
+        if (spinning) return;
+        if (!names.length) {
+            alert('Vui lòng nhập ít nhất 1 tên ở khung bên phải.');
+            namesInput.focus();
+            return;
+        }
+        spinning = true;
+        spinBtn.disabled = true;
+        resultDiv.textContent = 'Đang quay...';
+        // choose random index
+          let chosenName;
+
+        // Tạo cơ chế xác suất:
+        // 98% ra "Chúc bạn may mắn lần sau"
+        // 2% ra 1 trong các phần thưởng khác
+        if (Math.random() < 0.98) {
+            chosenName = "Chúc bạn may mắn lần sau😢";
+        } else {
+            // chọn ngẫu nhiên trong danh sách phần thưởng khác
+            const rewards = names.filter(n => n !== "Chúc bạn may mắn lần sau😢");
+            chosenName = rewards.length ? rewards[Math.floor(Math.random() * rewards.length)] : "Chúc bạn may mắn lần sau😢";
+        }
+
+        // tìm index trong wheel (nếu có)
+        let idx = names.indexOf(chosenName);
+        if (idx === -1) idx = 0; // fallback
+
+        const rotation = computeRotationForIndex(idx, names.length, 1 + Math.floor(Math.random() * 1));
+            // apply transform
+              wheel.style.transition = "none";
+            wheel.style.transform = "rotate(0deg)";
+            forceReflow(); // ép trình duyệt cập nhật
+
+            
+            wheel.style.transition = 'transform 1s cubic-bezier(.15,.85,.22,1)';
+            wheel.style.transform = `rotate(${rotation}deg)`;
+
+            // after animation end, reveal winner
+            const timeout = 1000; // Đã tăng lên 1000ms cho an toàn
+            setTimeout(() => {
+                spinning = false;
+                spinBtn.disabled = false;
+                // normalize final rotation to [0,360)
+                const finalRotation = rotation % 360;
+                // compute winning index again to be safe
+                const slice = 360 / names.length;
+                // winner center angle = (360 - finalRotation) % 360
+                const winnerAngle = (360 - finalRotation) % 360;
+                let winnerIndex = Math.floor((winnerAngle) / slice);
+                // because we mapped mid-angle, adjust by rounding
+                // compute distances to slice centers and select closest
+                let best = 0, bestDiff = 1e9;
+                for (let i = 0; i < names.length; i++) {
+                    const center = (i * slice + slice / 2) % 360;
+                    let diff = Math.abs(((center - winnerAngle + 540) % 360) - 180); // wrapped diff
+                    if (diff < bestDiff) { bestDiff = diff; best = i; }
+                }
+                winnerIndex = best;
+                const winner = names[winnerIndex];
+                
+                // Cập nhật kết quả trúng thưởng
+                resultDiv.textContent = ` Bạn đã nhận được: ${winner}`;
+
+                // GỌI HÀM LƯU LỊCH SỬ (ĐÃ CHỈNH SỬA)
+                addHistoryEntry(winner);
+                
+                // add small highlight pulse to the center
+                const center = wheel.querySelector('.wheel-center');
+                center.textContent = winner;
+                center.animate([
+                    { transform: 'translate(-50%,-50%) scale(1)' },
+                    { transform: 'translate(-50%,-50%) scale(1.06)' },
+                    { transform: 'translate(-50%,-50%) scale(1)' }
+                ], { duration: 900, easing: 'ease-out' });
+            }, timeout);
+    });
+
+    // When names change, re-render wheel
+    namesInput.addEventListener('input', () => {
+        renderWheel(getNames());
+        // reset wheel rotation so it shows new pattern
+        wheel.style.transition = 'none';
+        wheel.style.transform = 'rotate(0deg)';
+        wheel.querySelector('.wheel-center').textContent = '20K/1 Lượt';
+        resultDiv.textContent = 'Chưa quay';
+    });
+    
+    // Load preset names on tag click
+    presetTags.forEach(tag => {
+        tag.addEventListener('click', () => {
+            const dataset = tag.getAttribute('data-set');
+            let presetNames = '';
+          if (dataset === 'group1') {
+                // Cập nhật danh sách mẫu cho dễ kiểm tra
+                presetNames = "Chúc mừng bạn đã trúng 2 xiên thịt nướng🥳\nChúc bạn may mắn lần sau😢\nTrúng 1 ly nước ngọt Coca Cola\nHoàn tiền 10K\nThêm 1 lượt quay miễn phí";
+            }
+            namesInput.value = presetNames;
+            namesInput.dispatchEvent(new Event("input"));
+        });
+    });
+
+    // initial example
+    namesInput.value = "Chúc mừng bạn đã trúng 2 xiên thịt nướng🥳\nChúc bạn may mắn lần sau😢";
+    namesInput.dispatchEvent(new Event("input"));
+
+
+    // a11y: allow Enter key on spin button
+    spinBtn.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') spinBtn.click();
+        
+    });
+</script>
+
+</body>
+
+
+</html>
