@@ -1,2 +1,1 @@
-# taiorxiu
-taixiu
+đọc tôi đi r bn sẽ hiểu tôi
